@@ -4,9 +4,11 @@ import camt.cbsd.dao.StudentDao;
 import camt.cbsd.entity.Student;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,7 +20,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
-
 
 
 @Service
@@ -34,14 +35,22 @@ public class StudentServiceImpl implements StudentService {
         this.imageServerDir = imageServerDir;
     }
 
-    public List<Student> getStudents(){
-
-        return studentDao.getStudents();
+    @Override
+    @Transactional
+    public List<Student> getStudents() {
+        List<Student> students = studentDao.getStudents();
+        for(Student student : students){
+            Hibernate.initialize(student.getEnrolledCourse());
+        }
+        return students;
     }
 
     @Override
+    @Transactional
     public Student findById(long id) {
-        return studentDao.findById(id);
+        Student student = studentDao.findById(id);
+        Hibernate.initialize(student.getEnrolledCourse());
+        return student;
     }
 
     @Override
@@ -52,10 +61,10 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public Student addStudent(Student student, String imageFileName, BufferedImage image) throws IOException {
         // save file to the server
-        int newId = studentDao.size()+1;
-        String newFilename = newId +"."+ imageFileName;
-        File targetFile = Files.createFile(Paths.get(imageServerDir+newFilename)).toFile();
-        ImageIO.write(image,FilenameUtils.getExtension(imageFileName),targetFile);
+        int newId = studentDao.size() + 1;
+        String newFilename = newId + "." + imageFileName;
+        File targetFile = Files.createFile(Paths.get(imageServerDir + newFilename)).toFile();
+        ImageIO.write(image, FilenameUtils.getExtension(imageFileName), targetFile);
 
         student.setImage(newFilename);
         studentDao.addStudent(student);

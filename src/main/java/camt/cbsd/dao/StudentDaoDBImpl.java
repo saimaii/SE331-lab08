@@ -22,6 +22,7 @@ public class StudentDaoDBImpl implements StudentDao {
     public void setStudentRepository(StudentRepository studentRepository){
         this.studentRepository = studentRepository;
     }
+
     @Override
     public List<Student> getStudents(){
         return Lists.newArrayList(studentRepository.findAll());
@@ -30,14 +31,14 @@ public class StudentDaoDBImpl implements StudentDao {
 
     @Override
     public Student findById(long id) {
-        return null;
+        return studentRepository.findById(id);
     }
 
     @Override
     public Student addStudent(Student student){
         return studentRepository.save(student);
-
     }
+
     @Override
     public Integer size(){
         return (int)studentRepository.count();
